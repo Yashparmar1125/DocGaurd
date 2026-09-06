@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DocGuard — Multi-Task Document Image Forensics</title>
+  <link rel="stylesheet" href="styles.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <!-- Top Navigation Header -->
+  <header class="header">
+    <div class="brand">
+      <div class="brand-icon">🛡️</div>
+      <div class="brand-info">
+        <h1>DocGuard</h1>
+        <p>Hybrid Deep Forensics & Multi-Task Document Tamper Localization</p>
+      </div>
+    </div>
+    <div class="telemetry">
+      <span class="status-indicator"></span>
+      <span id="telemetryText">Initializing System...</span>
+    </div>
+  </header>
+
+  <!-- Main Workstation Layout -->
+  <main class="container">
+    <!-- Left Column: Controls & Ingestion -->
+    <section class="panel upload-panel">
+      <h2>Document Ingestion</h2>
+      <p class="panel-desc">Upload a scanned invoice, receipt, ID photo, or single-page PDF for forensic verification.</p>
+
+      <div class="drop-zone" id="dropZone">
+        <div class="drop-icon">📄</div>
+        <p>Drag & drop document here</p>
+        <span class="subtext">or click to browse from device</span>
+        <span class="format-tags">PDF • PNG • JPG • TIFF</span>
+        <input type="file" id="fileInput" accept=".pdf,.png,.jpg,.jpeg,.tiff,.tif,.bmp,.webp" hidden>
+      </div>
+
+      <div id="fileInfoCard" class="file-info-card hidden">
+        <span class="file-icon">📎</span>
+        <span id="fileName" class="file-name">filename.pdf</span>
+        <button id="clearFileBtn" class="icon-btn" title="Remove file">✕</button>
+      </div>
+
+      <div class="action-buttons">
+        <button id="analyzeBtn" class="btn btn-primary" disabled>
+          <span class="btn-text">Execute Forensic Audit</span>
+          <div class="spinner hidden" id="spinner"></div>
+        </button>
+      </div>
+
+      <div class="divider">
+        <span>OR RUN CONTROLLED TEST</span>
+      </div>
+
+      <div class="demo-samples">
+        <p class="subtext-label">Evaluate against calibrated test templates:</p>
+        <div class="sample-grid">
+          <button class="sample-btn" data-type="authentic">Authentic Invoice</button>
+          <button class="sample-btn" data-type="text_tamper">Text Replacement</button>
+          <button class="sample-btn" data-type="copy_move">Copy-Move Tampering</button>
+          <button class="sample-btn" data-type="splicing">Spliced Patch</button>
+          <button class="sample-btn" data-type="erasure">Inpainted Erasure</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Right Column: Forensic Results & Visual Inspector -->
+    <section class="panel results-panel" id="resultsPanel">
+      <div id="emptyState" class="empty-state">
+        <div class="empty-icon">🔬</div>
+        <h3>Forensic Inspection Workbench</h3>
+        <p>Upload a document or select a sample on the left to perform dual-stream (RGB + DCT) feature analysis, pixel-level localization, and OCR layout verification.</p>
+      </div>
+
+      <div id="reportContent" class="report-content hidden">
+        <!-- Verdict Banner -->
+        <div class="verdict-banner" id="verdictBanner">
+          <div class="verdict-left">
+            <span class="badge" id="verdictBadge">VERDICT</span>
+            <h2 id="verdictTitle">AUTHENTIC</h2>
+            <p id="forgeryTypeLabel">Identified Type: None</p>
+          </div>
+          <div class="verdict-right">
+            <div class="confidence-circle">
+              <span class="conf-value" id="confidenceValue">95.4%</span>
+              <span class="conf-label">Calibrated Confidence</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Visual Overlays Tabs -->
+        <div class="visualizer-card">
+          <div class="tabs">
+            <button class="tab-btn active" data-view="mask_overlay">Tamper Localization</button>
+            <button class="tab-btn" data-view="gradcam_overlay">Grad-CAM Heatmap</button>
+            <button class="tab-btn" data-view="clean_mask">Binary Mask</button>
+            <button class="tab-btn" data-view="rectified">Rectified / Deskewed</button>
+            <button class="tab-btn" data-view="original">Raw Document</button>
+          </div>
+          <div class="image-viewer">
+            <img id="viewerImage" src="" alt="Forensic Visualization">
+          </div>
+          <div class="viewer-caption" id="viewerCaption">
+            Showing pixel-level tampering segmentation overlay with detected bounding boxes.
+          </div>
+        </div>
+
+        <!-- Forensic Analysis Findings -->
+        <div class="findings-grid">
+          <div class="finding-card">
+            <h4>Spatial Localization Findings</h4>
+            <p id="regionsSummaryText">No tampering regions localized.</p>
+          </div>
+          <div class="finding-card">
+            <h4>OCR Layout & Typographic Check</h4>
+            <p id="ocrSummaryText">Consistent font sizing and baseline alignment.</p>
+          </div>
+        </div>
+
+        <!-- Rationale Narrative -->
+        <div class="narrative-card">
+          <h4>Technical Forensic Rationale</h4>
+          <p id="rationaleText">Deep neural network decision narrative.</p>
+        </div>
+
+        <!-- Download Report CTA -->
+        <div class="report-cta">
+          <a id="downloadPdfBtn" class="btn btn-secondary" href="#" target="_blank">
+            📥 Download Formal Forensic Audit Certificate (PDF)
+          </a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
