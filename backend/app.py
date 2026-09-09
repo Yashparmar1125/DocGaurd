@@ -8,7 +8,7 @@ from pathlib import Path
 import io
 import uuid
 import base64
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 import cv2
 import numpy as np
 import torch

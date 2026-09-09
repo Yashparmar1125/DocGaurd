@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Union, Tuple
 import numpy as np
 from PIL import Image, ImageOps
-import fitz  # PyMuPDF
+import pymupdf as fitz  # PyMuPDF
 
 
 class DocumentLoadingError(Exception):
