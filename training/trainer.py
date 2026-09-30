@@ -45,6 +45,9 @@ class DocGuardTrainer:
         self.checkpoint_dir = Path(checkpoint_dir)
         self.checkpoint_dir.mkdir(parents=True, exist_ok=True)
 
+        self.use_amp = self.device.type == "cuda"
+        self.scaler = torch.amp.GradScaler("cuda", enabled=self.use_amp)
+
         self.optimizer = self._build_differential_optimizer()
         self.scheduler = CosineAnnealingLR(
             self.optimizer, T_max=self.config.epochs, eta_min=1e-6
@@ -88,12 +91,20 @@ class DocGuardTrainer:
             }
 
             self.optimizer.zero_grad()
-            outputs = self.model(rgb, dct)
-            loss_dict = self.loss_fn(outputs, targets)
+            with torch.amp.autocast("cuda", enabled=self.use_amp):
+                outputs = self.model(rgb, dct)
+                loss_dict = self.loss_fn(outputs, targets)
 
-            loss_dict["loss_total"].backward()
-            torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=5.0)
-            self.optimizer.step()
+            if self.use_amp:
+                self.scaler.scale(loss_dict["loss_total"]).backward()
+                self.scaler.unscale_(self.optimizer)
+                torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=5.0)
+                self.scaler.step(self.optimizer)
+                self.scaler.update()
+            else:
+                loss_dict["loss_total"].backward()
+                torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=5.0)
+                self.optimizer.step()
 
             running_losses["total"] += loss_dict["loss_total"].item()
             running_losses["cls"] += loss_dict["loss_cls"].item()
@@ -126,8 +137,9 @@ class DocGuardTrainer:
                     "forgery_type": batch["forgery_type"].to(self.device),
                 }
 
-                outputs = self.model(rgb, dct)
-                loss_dict = self.loss_fn(outputs, targets)
+                with torch.amp.autocast("cuda", enabled=self.use_amp):
+                    outputs = self.model(rgb, dct)
+                    loss_dict = self.loss_fn(outputs, targets)
                 running_loss += loss_dict["loss_total"].item()
 
                 # Segmentation IoU

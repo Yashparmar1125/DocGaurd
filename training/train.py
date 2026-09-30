@@ -91,6 +91,12 @@ def main():
         default=None,
         help="Output checkpoint filename (default: docguard_<arch>_best.pt)",
     )
+    parser.add_argument(
+        "--resume",
+        type=str,
+        default=None,
+        help="Optional path to existing checkpoint to continue training from",
+    )
 
     args = parser.parse_args()
 
@@ -119,6 +125,12 @@ def main():
             pretrained=args.pretrained,
             num_classes=5,
         )
+
+    if args.resume and Path(args.resume).exists():
+        print(f"[*] Resuming weights from checkpoint: {args.resume}")
+        ckpt = torch.load(args.resume, map_location=device, weights_only=False)
+        state_dict = ckpt.get("model_state_dict", ckpt)
+        model.load_state_dict(state_dict, strict=False)
 
     # 2. Prepare DataLoaders
     if args.dataset == "doctamper":
