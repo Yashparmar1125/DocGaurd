@@ -14,15 +14,14 @@ from torch.optim.lr_scheduler import CosineAnnealingLR
 
 from .losses import MultiTaskDocGuardLoss
 from .config import TrainingConfig
-from models.docguard import DocGuardModel
 
 
 class DocGuardTrainer:
-    """Orchestrates multi-task training for DocGuard."""
+    """Orchestrates multi-task training for DocGuard (CNN Hybrid or Vision Transformer)."""
 
     def __init__(
         self,
-        model: DocGuardModel,
+        model: nn.Module,
         config: TrainingConfig = None,
         device: Optional[str] = None,
         checkpoint_dir: str = "checkpoints",

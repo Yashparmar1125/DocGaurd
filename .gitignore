@@ -40,6 +40,7 @@ checkpoints/
 data/raw/
 data/generated/
 data/downloaded/
+data/benchmark/
 *.pdf_cache/
 reports_cache/
 temp/

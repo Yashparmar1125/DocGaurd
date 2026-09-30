@@ -27,8 +27,14 @@ class DocGuardTransformerModel(nn.Module):
         pretrained_backbone: bool = False,
         num_forgery_types: int = 5,
         embed_dim: int = 512,
+        pretrained: Optional[bool] = None,
+        num_classes: Optional[int] = None,
     ):
         super().__init__()
+        if pretrained is not None:
+            pretrained_backbone = pretrained
+        if num_classes is not None:
+            num_forgery_types = num_classes
         # RGB Stream: Swin-T (outputs stages with channels [96, 192, 384, 768])
         self.rgb_stream = SwinRGBBackbone(pretrained=pretrained_backbone, img_size=512)
 

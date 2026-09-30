@@ -17,7 +17,14 @@ class GradCAM:
 
     def __init__(self, model: nn.Module, target_layer: nn.Module = None):
         self.model = model
-        self.target_layer = target_layer or model.rgb_stream.layer4
+        if target_layer is not None:
+            self.target_layer = target_layer
+        elif hasattr(model, "fusion"):
+            self.target_layer = model.fusion
+        elif hasattr(model, "rgb_stream") and hasattr(model.rgb_stream, "layer4"):
+            self.target_layer = model.rgb_stream.layer4
+        else:
+            self.target_layer = model.rgb_stream
         self.gradients = None
         self.activations = None
         self._hook_handles = []
@@ -25,7 +32,10 @@ class GradCAM:
 
     def _register_hooks(self):
         def forward_hook(module, input, output):
-            self.activations = output.detach()
+            if isinstance(output, tuple):
+                self.activations = output[0].detach()
+            else:
+                self.activations = output.detach()
 
         def backward_hook(module, grad_in, grad_out):
             self.gradients = grad_out[0].detach()
