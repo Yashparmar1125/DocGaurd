@@ -33,15 +33,21 @@ def main():
     )
     parser.add_argument(
         "--dataset",
-        choices=["benchmark", "synthetic"],
-        default="benchmark",
-        help="Dataset type: 'benchmark' (real images + masks from --data-dir) or 'synthetic'",
+        choices=["doctamper", "benchmark", "synthetic"],
+        default="doctamper",
+        help="Dataset type: 'doctamper' (LMDB from data/dataset), 'benchmark' (images/masks), or 'synthetic'",
     )
     parser.add_argument(
         "--data-dir",
         type=str,
-        default="data/benchmark",
-        help="Path to benchmark dataset folder containing images/ and masks/",
+        default="data/dataset",
+        help="Path to dataset directory",
+    )
+    parser.add_argument(
+        "--max-samples",
+        type=int,
+        default=None,
+        help="Optional limit on number of training samples for quick runs",
     )
     parser.add_argument(
         "--epochs",
@@ -110,7 +116,22 @@ def main():
         )
 
     # 2. Prepare DataLoaders
-    if args.dataset == "benchmark":
+    if args.dataset == "doctamper":
+        from data.doctamper_dataset import create_doctamper_dataloaders
+        train_lmdb = Path(args.data_dir) / "DocTamperV1-SCD"
+        val_lmdb = Path(args.data_dir) / "DocTamperV1-FCD"
+        if not train_lmdb.exists():
+            train_lmdb = Path(args.data_dir) / "DocTamperV1-TrainingSet"
+
+        print(f"[*] Loading DocTamper LMDB from: {args.data_dir}")
+        train_loader, val_loader = create_doctamper_dataloaders(
+            train_lmdb=train_lmdb,
+            val_lmdb=val_lmdb,
+            max_train_samples=args.max_samples,
+            max_val_samples=min(args.max_samples // 4, 500) if args.max_samples else None,
+            batch_size=args.batch_size,
+        )
+    elif args.dataset == "benchmark":
         data_path = Path(args.data_dir)
         if not data_path.exists():
             raise FileNotFoundError(

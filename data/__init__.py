@@ -8,6 +8,7 @@ and PyTorch Dataset/DataLoader implementations.
 from .generator import DocumentForgeryGenerator, ForgeryType
 from .dataset import DocumentForgeryDataset, create_dataloaders
 from .benchmark_dataset import BenchmarkDocumentDataset, create_benchmark_dataloaders
+from .doctamper_dataset import DocTamperLMDBDataset, create_doctamper_dataloaders
 
 __all__ = [
     "DocumentForgeryGenerator",
@@ -16,4 +17,6 @@ __all__ = [
     "create_dataloaders",
     "BenchmarkDocumentDataset",
     "create_benchmark_dataloaders",
+    "DocTamperLMDBDataset",
+    "create_doctamper_dataloaders",
 ]

@@ -41,6 +41,7 @@ data/raw/
 data/generated/
 data/downloaded/
 data/benchmark/
+data/dataset/
 *.pdf_cache/
 reports_cache/
 temp/
