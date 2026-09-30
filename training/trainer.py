@@ -12,6 +12,7 @@ from torch.utils.data import DataLoader
 from torch.optim import AdamW
 from torch.optim.lr_scheduler import CosineAnnealingLR
 
+from tqdm import tqdm
 from .losses import MultiTaskDocGuardLoss
 from .config import TrainingConfig
 
@@ -76,7 +77,8 @@ class DocGuardTrainer:
         running_losses = {"total": 0.0, "cls": 0.0, "type": 0.0, "seg": 0.0}
         total_batches = len(dataloader)
 
-        for batch in dataloader:
+        pbar = tqdm(dataloader, desc=f"Epoch {epoch} [Train]", leave=False)
+        for batch in pbar:
             rgb = batch["rgb"].to(self.device)
             dct = batch["dct"].to(self.device)
             targets = {
@@ -98,6 +100,8 @@ class DocGuardTrainer:
             running_losses["type"] += loss_dict["loss_type"].item()
             running_losses["seg"] += loss_dict["loss_seg"].item()
 
+            pbar.set_postfix({"loss": f"{loss_dict['loss_total'].item():.3f}", "seg": f"{loss_dict['loss_seg'].item():.3f}"})
+
         self.scheduler.step()
 
         return {k: v / max(total_batches, 1) for k, v in running_losses.items()}
@@ -111,8 +115,9 @@ class DocGuardTrainer:
         correct_cls = 0
         total_samples = 0
 
+        pbar = tqdm(dataloader, desc="Validating", leave=False)
         with torch.no_grad():
-            for batch in dataloader:
+            for batch in pbar:
                 rgb = batch["rgb"].to(self.device)
                 dct = batch["dct"].to(self.device)
                 targets = {

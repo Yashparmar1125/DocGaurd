@@ -95,6 +95,11 @@ def main():
     args = parser.parse_args()
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
+    if device == "cpu":
+        import os
+        num_threads = min(8, os.cpu_count() or 4)
+        torch.set_num_threads(num_threads)
+
     print(f"\n=======================================================")
     print(f"  DocGuard Forensic Training")
     print(f"  Architecture:  {args.architecture.upper()}")
