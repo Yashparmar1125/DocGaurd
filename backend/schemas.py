@@ -44,3 +44,4 @@ class HealthResponse(BaseModel):
     device: str
     gpu_name: Optional[str] = None
     model_loaded: bool
+    architectures: List[str] = ["hybrid", "transformer"]

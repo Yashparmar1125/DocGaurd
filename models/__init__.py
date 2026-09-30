@@ -7,10 +7,16 @@ Contains:
 """
 
 from .docguard import DocGuardModel
-from .baselines import ELARandomForestBaseline, PlainResNetBaseline
+from .docguard_transformer import DocGuardTransformerModel
+try:
+    from .baselines import ELARandomForestBaseline, PlainResNetBaseline
+except (ImportError, OSError):
+    ELARandomForestBaseline = None
+    PlainResNetBaseline = None
 
 __all__ = [
     "DocGuardModel",
+    "DocGuardTransformerModel",
     "ELARandomForestBaseline",
     "PlainResNetBaseline",
 ]

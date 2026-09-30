@@ -19,6 +19,7 @@ import torch
 
 from preprocessing.pipeline import PreprocessingPipeline
 from models.docguard import DocGuardModel
+from models.docguard_transformer import DocGuardTransformerModel
 from localization.postprocess import PostProcessor, TamperedRegion
 from ocr.anomaly_detector import OCRAnomalyDetector
 from explainability.gradcam import GradCAM
@@ -32,14 +33,17 @@ class DocGuardInferencePipeline:
 
     def __init__(
         self,
-        model: Optional[DocGuardModel] = None,
+        model: Optional[torch.nn.Module] = None,
         checkpoint_path: Optional[Union[str, Path]] = None,
+        architecture: str = "hybrid",
         device: Optional[str] = None,
     ):
         if device is None:
             self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         else:
             self.device = torch.device(device)
+
+        self.architecture = architecture.lower()
 
         # Initialize model
         if checkpoint_path is None:
@@ -49,11 +53,22 @@ class DocGuardInferencePipeline:
 
         if model is not None:
             self.model = model.to(self.device)
+        elif self.architecture == "transformer":
+            self.model = DocGuardTransformerModel(pretrained_backbone=False).to(self.device)
+            if checkpoint_path and Path(checkpoint_path).exists():
+                try:
+                    ckpt = torch.load(checkpoint_path, map_location=self.device, weights_only=False)
+                    self.model.load_state_dict(ckpt["model_state_dict"])
+                except Exception:
+                    pass
         else:
             self.model = DocGuardModel(pretrained_backbone=False).to(self.device)
             if checkpoint_path and Path(checkpoint_path).exists():
-                ckpt = torch.load(checkpoint_path, map_location=self.device, weights_only=False)
-                self.model.load_state_dict(ckpt["model_state_dict"])
+                try:
+                    ckpt = torch.load(checkpoint_path, map_location=self.device, weights_only=False)
+                    self.model.load_state_dict(ckpt["model_state_dict"])
+                except Exception:
+                    pass
         self.model.eval()
 
         self.preprocessor = PreprocessingPipeline(target_size=(512, 512))

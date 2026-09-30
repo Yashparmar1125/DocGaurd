@@ -41,15 +41,15 @@ app.add_middleware(
 REPORTS_DIR = Path("reports_cache")
 REPORTS_DIR.mkdir(parents=True, exist_ok=True)
 
-# Pipeline Singleton
-_pipeline: DocGuardInferencePipeline = None
+# Pipeline Cache
+_pipelines: Dict[str, DocGuardInferencePipeline] = {}
 
 
-def get_pipeline() -> DocGuardInferencePipeline:
-    global _pipeline
-    if _pipeline is None:
-        _pipeline = DocGuardInferencePipeline()
-    return _pipeline
+def get_pipeline(architecture: str = "hybrid") -> DocGuardInferencePipeline:
+    global _pipelines
+    if architecture not in _pipelines:
+        _pipelines[architecture] = DocGuardInferencePipeline(architecture=architecture)
+    return _pipelines[architecture]
 
 
 def ndarray_to_base64_jpg(img: np.ndarray, quality: int = 90) -> str:
@@ -73,14 +73,18 @@ def health():
         status="healthy",
         device="cuda" if gpu_available else "cpu",
         gpu_name=gpu_name,
-        model_loaded=get_pipeline() is not None,
+        model_loaded=get_pipeline("hybrid") is not None,
+        architectures=["hybrid", "transformer"],
     )
 
 
 @app.post("/api/analyze")
-async def analyze_document(file: UploadFile = File(...)):
+async def analyze_document(
+    file: UploadFile = File(...),
+    architecture: str = "hybrid",
+):
     """Uploads document image or PDF, runs full inference, and returns forensic findings."""
-    pipeline = get_pipeline()
+    pipeline = get_pipeline(architecture=architecture)
     contents = await file.read()
     suffix = Path(file.filename).suffix.lower()
 
@@ -135,7 +139,10 @@ async def analyze_document(file: UploadFile = File(...)):
 
 
 @app.post("/api/sample")
-def analyze_synthetic_sample(forgery_type: Optional[str] = None):
+def analyze_synthetic_sample(
+    forgery_type: Optional[str] = None,
+    architecture: str = "hybrid",
+):
     """Generates a controlled synthetic document (authentic or forged) and analyzes it."""
     generator = DocumentForgeryGenerator()
     type_map = {
@@ -148,7 +155,7 @@ def analyze_synthetic_sample(forgery_type: Optional[str] = None):
     selected_type = type_map.get(forgery_type, None)
     sample = generator.generate_sample(forgery_type=selected_type)
 
-    pipeline = get_pipeline()
+    pipeline = get_pipeline(architecture=architecture)
     result = pipeline.analyze(sample["image"])
 
     report_id = uuid.uuid4().hex

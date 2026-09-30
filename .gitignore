@@ -41,6 +41,7 @@ data/raw/
 data/generated/
 data/downloaded/
 *.pdf_cache/
+reports_cache/
 temp/
 outputs/
 *.log
